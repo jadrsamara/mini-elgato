@@ -426,25 +426,15 @@ async def list_pick_sheet(ctx):
     import random
     import requests
 
-    # db_connection = connect_db(guild_id=ctx.guild.id, db_name='list')
-    # db_cursor = db_connection.cursor()
-
-    # res = db_cursor.execute("SELECT rowid, item_name, user_name FROM list;")
-    # list_of_items = res.fetchall()
-
     url = 'https://script.google.com/macros/s/AKfycbzKnfnuRSs1SszTi4BJJJC8czAXJ8ZrJyAvz6tiapxfIun-NjLXW3K89Dvmi7LiviZq/exec'
     response = requests.get(url)
     list_of_items = list(response.json())
 
-    print(list_of_items)
-
-
     if (len(list_of_items) == 0):
-        log_info(f'List is empty.', ctx)
+        logger.log_info(f'List is empty.', ctx)
         await ctx.send(f'List is empty.')
     
     result = list_of_items[random.randint(0, len(list_of_items)-1)]
-    # result = f'{result[0]} - {result[1]} - {result[2]}'
     result = result[0]
 
     # time.sleep(0.5)
@@ -540,6 +530,35 @@ async def list_view(ctx):
         
         logger.log_info(fetch, ctx)
         await ctx.send(item_list)
+
+
+@bot.hybrid_command(name='list_view_sheet', description='View the items list')
+async def list_view_sheet(ctx):
+
+    """
+    view the items list
+
+    :return: current items list
+    """
+
+    import requests
+
+    url = 'https://script.google.com/macros/s/AKfycbzKnfnuRSs1SszTi4BJJJC8czAXJ8ZrJyAvz6tiapxfIun-NjLXW3K89Dvmi7LiviZq/exec'
+    response = requests.get(url)
+    list_of_items = list(response.json())
+
+    if (len(list_of_items) == 0):
+        logger.log_info(f'List is empty.', ctx)
+        await ctx.send(f'List is empty.')
+    else:
+        item_list = f'Item list:\n```{1} - {list_of_items[0][0]}'
+        for i, value in enumerate(list_of_items):
+            if i == 0:
+                continue
+            item_list+=f'\n{i+1} - {value[0]}'
+        item_list+='```'
+        await ctx.send(item_list)
+
 
 
 @bot.hybrid_command(name='list_delete', description='Clear the an item from the items list')
