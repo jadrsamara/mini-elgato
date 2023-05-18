@@ -412,6 +412,56 @@ async def list_pick(ctx):
         await message.edit(content=f'Choosen item for you is: **{result}**')
 
 
+@bot.hybrid_command(name='list_pick', description='Pick a random item from the items list')
+async def list_pick_sheet(ctx):
+
+    """
+    picks an item from a list that you create.
+
+    :param string: string (optional)
+    :return: sends multiple messages as a suspense, then sends the random number.
+    """
+
+    import time
+    import random
+    import requests
+
+    db_connection = connect_db(guild_id=ctx.guild.id, db_name='list')
+    db_cursor = db_connection.cursor()
+
+    # res = db_cursor.execute("SELECT rowid, item_name, user_name FROM list;")
+    # list_of_items = res.fetchall()
+
+    url = 'https://script.google.com/macros/s/AKfycbzKnfnuRSs1SszTi4BJJJC8czAXJ8ZrJyAvz6tiapxfIun-NjLXW3K89Dvmi7LiviZq/exec'
+    response = requests.get(url)
+    list_of_items = list(response.json())
+
+
+    if (len(list_of_items) == 0):
+        log_info(f'List is empty.', ctx)
+        await ctx.send(f'List is empty.')
+    
+    result = list_of_items[random.randint(0, len(list_of_items)-1)]
+    result = f'{result[0]} - {result[1]} - {result[2]}'
+
+    # time.sleep(0.5)
+    # add check if voice bot is present
+
+    if await come(ctx, 'drum_roll') != 'err':
+    
+        message = await ctx.reply(content='🥁')
+        time.sleep(1)
+        await message.edit(content='🥁 🥁 ')
+        time.sleep(1)
+        await message.edit(content='🥁 🥁 🥁 ')
+        time.sleep(1)
+        await message.edit(content='🥁 🥁 🥁 🥁 ')
+        time.sleep(1)
+        await message.edit(content='🥁 🥁 🥁 🥁 🥁 ')
+        time.sleep(1)
+        await message.edit(content=f'Choosen item for you is: **{result}**')
+
+
 @bot.hybrid_command(name='list_add', description='Add an to the item list in order to pick a random item')
 async def item_add(ctx, *, item_name):
 
