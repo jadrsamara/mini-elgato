@@ -436,13 +436,16 @@ async def list_pick_sheet(ctx):
     response = requests.get(url)
     list_of_items = list(response.json())
 
+    print(list_of_items)
+
 
     if (len(list_of_items) == 0):
         log_info(f'List is empty.', ctx)
         await ctx.send(f'List is empty.')
     
     result = list_of_items[random.randint(0, len(list_of_items)-1)]
-    result = f'{result[0]} - {result[1]} - {result[2]}'
+    # result = f'{result[0]} - {result[1]} - {result[2]}'
+    result = result[0]
 
     # time.sleep(0.5)
     # add check if voice bot is present
