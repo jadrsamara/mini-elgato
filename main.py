@@ -412,7 +412,7 @@ async def list_pick(ctx):
         await message.edit(content=f'Choosen item for you is: **{result}**')
 
 
-@bot.hybrid_command(name='list_pick', description='Pick a random item from the items list')
+@bot.hybrid_command(name='list_pick_sheet', description='Pick a random item from the items list')
 async def list_pick_sheet(ctx):
 
     """
