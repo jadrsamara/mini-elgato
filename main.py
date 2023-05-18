@@ -426,8 +426,8 @@ async def list_pick_sheet(ctx):
     import random
     import requests
 
-    db_connection = connect_db(guild_id=ctx.guild.id, db_name='list')
-    db_cursor = db_connection.cursor()
+    # db_connection = connect_db(guild_id=ctx.guild.id, db_name='list')
+    # db_cursor = db_connection.cursor()
 
     # res = db_cursor.execute("SELECT rowid, item_name, user_name FROM list;")
     # list_of_items = res.fetchall()
