@@ -435,7 +435,7 @@ async def list_pick_sheet(ctx):
         await ctx.send(f'List is empty.')
     
     result = list_of_items[random.randint(0, len(list_of_items)-1)]
-    result = f'{result[0]} - {result[1]}'
+    result = f'{result[1]} - {result[0]}'
 
     # time.sleep(0.5)
     # add check if voice bot is present
@@ -551,11 +551,11 @@ async def list_view_sheet(ctx):
         logger.log_info(f'List is empty.', ctx)
         await ctx.send(f'List is empty.')
     else:
-        item_list = f'Item list:\n```{1} - {list_of_items[0][0]} - {list_of_items[0][1]}'
+        item_list = f'Item list:\n```{1} - {list_of_items[0][1]} - {list_of_items[0][0]}'
         for i, value in enumerate(list_of_items):
             if i == 0:
                 continue
-            item_list+=f'\n{i+1} - {value[0]} - {value[1]}'
+            item_list+=f'\n{i+1} - {value[1]} - {value[0]}'
         item_list+='```'
         await ctx.send(item_list)
 
