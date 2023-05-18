@@ -395,7 +395,7 @@ async def list_pick(ctx):
     result = f'{result[0]} - {result[1]} - {result[2]}'
 
     # time.sleep(0.5)
-    # add check if voice bot is present
+    # add check if voice bot is present 
 
     if await come(ctx, 'drum_roll') != 'err':
     
