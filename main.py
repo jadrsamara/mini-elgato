@@ -9,6 +9,9 @@ import sqlite3
 import requests
 import database
 import logger
+import newrelic.agent
+
+newrelic.agent.initialize('newrelic.ini', 'production')
 
 # * * * * * * * * * *  BOT SETTINGS  * * * * * * * * * *
 
