@@ -396,6 +396,43 @@ async def list_delete(ctx, *, num):
         await ctx.send(f'You can only delete items picked by you.')
 
 
+"""
+Random commands
+"""
+
+@bot.hybrid_command(name='joke', description='Tells a lame Joke')
+async def joke(ctx):
+
+    """
+    tells you a randome lame (dad) joke.
+
+    :return: sends a joke as a message to the same channel.
+    """
+
+    response = requests.get("https://icanhazdadjoke.com/",
+                            headers={
+                                "Accept": "application/json",
+                                "User-Agent": "El Gato - Discord bot"
+                            })
+    await ctx.reply(response.json()['joke'])
+    logger.log_info(f'User was given this lame joke: {response.json()["joke"]}', ctx)
+
+
+@bot.hybrid_command(name='bored', description='I\'m board, what should I do?')
+async def bored(ctx):
+    
+    """
+    tells you something to do when you're bored.
+
+    :return: sends a suggestion as a message to the same channel.
+    """
+
+    response = requests.get("https://www.boredapi.com/api/activity",
+                            headers={"User-Agent": "El Gato - Discord bot"})
+    await ctx.reply(response.json()['activity'])
+    logger.log_info(f'User was recommended this activity: {response.json()["activity"]}', ctx)
+
+
 # * * * * * * * * * * * RUN BOT * * * * * * * * * * * *
 
 @bot.command()
@@ -403,8 +440,22 @@ async def sync(ctx):
     if ctx.message.author.mention.__eq__('<@465981081456214019>'):
         _sync = await ctx.bot.tree.sync()
         await ctx.send(f'Synced {len(_sync)} commands!')
+        logger.log_info('Commands synced!', ctx)
     else:
         await ctx.send(f'You don\'t have permission.')
+        logger.log_info('User have no permission to sync commands', ctx)
+
+@bot.command()
+async def ping(ctx):
+
+    """
+    a way to make sure the bot is running. 
+
+    :return: sends a message "pong" to the channel.
+    """
+
+    await ctx.send(f'Pong')
+    logger.log_info('Pong', ctx)
 
 
 
