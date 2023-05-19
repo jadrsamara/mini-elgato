@@ -22,7 +22,7 @@ intents.message_content = True
 help_command = commands.DefaultHelpCommand(no_category = 'Commands')
 
 bot = commands.Bot(
-    command_prefix = commands.when_mentioned_or('=='),
+    command_prefix = commands.when_mentioned_or('='),
     description = "Mini El Gato Bot",
     help_command = help_command, 
     intents=intents
