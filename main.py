@@ -22,7 +22,7 @@ intents.message_content = True
 help_command = commands.DefaultHelpCommand(no_category = 'Commands')
 
 bot = commands.Bot(
-    command_prefix = commands.when_mentioned_or('='),
+    command_prefix = commands.when_mentioned_or('=='),
     description = "Mini El Gato Bot",
     help_command = help_command, 
     intents=intents
@@ -127,6 +127,28 @@ async def dc(ctx, from_='command'):
         await ctx.send(content="Disconnected", ephemeral=True)
 
 
+async def wait_until_voice_ready(ctx):
+    import asyncio
+
+    voice_client = ctx.channel.guild.voice_client
+
+    try:
+        voice_channel = ctx.author.voice.channel
+    except AttributeError:
+        await ctx.send(content="You are not in the same voice channel!", ephemeral=True)
+        return
+    
+    for i in range(15):
+        if voice_client is not None:
+            break
+        await asyncio.sleep(0.25)
+
+    while not voice_client.is_playing():
+        await asyncio.sleep(0.25)
+
+    return
+
+
 """
 List Picker commands
 """
@@ -158,6 +180,8 @@ async def list_pick(ctx):
     result = f'{result[0]} - {result[1]} - {result[2]}'
 
     if await come(ctx, 'drum_roll') != 'err':
+
+        await wait_until_voice_ready(ctx)
     
         message = await ctx.reply(content='🥁')
         time.sleep(1)
@@ -200,6 +224,8 @@ async def list_pick_sheet(ctx):
     result = f'{result[1]} - {result[0]}'
 
     if await come(ctx, 'drum_roll') != 'err':
+
+        await wait_until_voice_ready(ctx)
     
         message = await ctx.reply(content='🥁')
         time.sleep(1)
