@@ -44,7 +44,7 @@ root_logger = logging.getLogger()
 root_logger.addFilter(SystemLogFilter())
 
 
-def log_info(message, ctx):
+def info(message, ctx):
     """
     Info logger interface
     """
@@ -56,7 +56,7 @@ def log_info(message, ctx):
     })
 
 
-def log_warn(message, ctx):
+def warn(message, ctx):
     """
     Warn logger interface
     """
@@ -68,7 +68,7 @@ def log_warn(message, ctx):
     })
 
 
-def log_error(error, ctx):
+def error(error, ctx):
     """
     Error logger interface
     """

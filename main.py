@@ -35,7 +35,7 @@ async def on_command(ctx):
     """
     Function to log when a real command is invoked.
     """
-    logger.log_info(f'Command {ctx.command} was invoked by {ctx.message.author}', ctx)
+    logger.info(f'Command {ctx.command} was invoked by {ctx.message.author}', ctx)
 
 
 @bot.event
@@ -43,7 +43,7 @@ async def on_command_error(ctx, error):
     """
     Function to log when a command has an exception.
     """
-    logger.log_error(error, ctx)
+    logger.error(error, ctx)
 
 
 @bot.event
@@ -51,7 +51,7 @@ async def on_command_completion(ctx):
     """
     Function to log when a real command has finished executing.
     """
-    logger.log_info(f'Command {ctx.command} has finished for user {ctx.message.author}', ctx)
+    logger.info(f'Command {ctx.command} has finished for user {ctx.message.author}', ctx)
 
 
 # * * * * * * * * * COMMAND FUNCTIONS * * * * * * * * *
@@ -173,7 +173,7 @@ async def list_pick(ctx):
     list_of_items = res.fetchall()
 
     if (len(list_of_items) == 0):
-        logger.log_info(f'List is empty.', ctx)
+        logger.info(f'List is empty.', ctx)
         await ctx.send(f'List is empty.')
     
     result = list_of_items[random.randint(0, len(list_of_items)-1)]
@@ -219,7 +219,7 @@ async def list_pick_sheet(ctx):
     list_of_items = list(response.json())
 
     if (len(list_of_items) == 0):
-        logger.log_info(f'List is empty.', ctx)
+        logger.info(f'List is empty.', ctx)
         await ctx.send(f'List is empty.')
     
     result = list_of_items[random.randint(0, len(list_of_items)-1)]
@@ -265,11 +265,11 @@ async def item_add(ctx, *, item_name):
         res = db_cursor.execute(f'INSERT INTO list (item_name, item_name_lower, user_name) VALUES ("{item_name}", "{item_name.lower()}", "{user_name}")')
         db_connection.commit()
     except sqlite3.IntegrityError:
-        logger.log_info(f'Item already added by you.', ctx)
+        logger.info(f'Item already added by you.', ctx)
         await ctx.send(f'Item already added by you.')
         return
     
-    logger.log_info(f'Item Added: {item_name} - {user_name}', ctx)
+    logger.info(f'Item Added: {item_name} - {user_name}', ctx)
     await ctx.send(f'Item Added!\n```{item_name} - {user_name}```')
     await list_view(ctx)
 
@@ -289,7 +289,7 @@ async def list_clear(ctx):
     db_cursor.execute("DROP TABLE IF EXISTS list;")
     db_connection.commit()
 
-    logger.log_info(f'List list have been cleared.', ctx)
+    logger.info(f'List list have been cleared.', ctx)
     await ctx.send(f'List have been cleared.')
 
 
@@ -311,7 +311,7 @@ async def list_view(ctx):
     print(fetch)
 
     if (len(fetch) == 0):
-        logger.log_info(f'List is empty.', ctx)
+        logger.info(f'List is empty.', ctx)
         await ctx.send(f'List is empty.')
     else:
         item_list = f'Item list:\n```{fetch[0][0]} - {fetch[0][1]} - {fetch[0][2]}'
@@ -319,7 +319,7 @@ async def list_view(ctx):
             item_list+=f'\n{fetch[i][0]} - {fetch[i][1]} - {fetch[i][2]}'
         item_list+='```'
         
-        logger.log_info(fetch, ctx)
+        logger.info(fetch, ctx)
         await ctx.send(item_list)
 
 
@@ -339,7 +339,7 @@ async def list_view_sheet(ctx):
     list_of_items = list(response.json())
 
     if (len(list_of_items) == 0):
-        logger.log_info(f'List is empty.', ctx)
+        logger.info(f'List is empty.', ctx)
         await ctx.send(f'List is empty.')
     else:
         item_list = f'Item list:\n```{1} - {list_of_items[0][1]} - {list_of_items[0][0]}'
@@ -371,7 +371,7 @@ async def list_delete(ctx, *, num):
     fetch = res.fetchone()
 
     if (fetch is None):
-        logger.log_info(f'Item picked is not on the list.', ctx)
+        logger.info(f'Item picked is not on the list.', ctx)
         await ctx.send(f'Item picked is not on the list.')
     elif fetch[0].__eq__(ctx.author):
         db_cursor.execute(f"""
@@ -388,11 +388,11 @@ async def list_delete(ctx, *, num):
         
         db_connection.commit()
 
-        logger.log_info(f'List has been deleted.', ctx)
+        logger.info(f'List has been deleted.', ctx)
         await ctx.send(f'List has been deleted.')
         await list_view(ctx)
     else:
-        logger.log_info(f'You can only delete items picked by you. [{fetch[0]} != {ctx.author}]', ctx)
+        logger.info(f'You can only delete items picked by you. [{fetch[0]} != {ctx.author}]', ctx)
         await ctx.send(f'You can only delete items picked by you.')
 
 
@@ -415,7 +415,7 @@ async def joke(ctx):
                                 "User-Agent": "El Gato - Discord bot"
                             })
     await ctx.reply(response.json()['joke'])
-    logger.log_info(f'User was given this lame joke: {response.json()["joke"]}', ctx)
+    logger.info(f'User was given this lame joke: {response.json()["joke"]}', ctx)
 
 
 @bot.hybrid_command(name='bored', description='I\'m board, what should I do?')
@@ -430,7 +430,7 @@ async def bored(ctx):
     response = requests.get("https://www.boredapi.com/api/activity",
                             headers={"User-Agent": "El Gato - Discord bot"})
     await ctx.reply(response.json()['activity'])
-    logger.log_info(f'User was recommended this activity: {response.json()["activity"]}', ctx)
+    logger.info(f'User was recommended this activity: {response.json()["activity"]}', ctx)
 
 
 # * * * * * * * * * * * RUN BOT * * * * * * * * * * * *
@@ -440,10 +440,11 @@ async def sync(ctx):
     if ctx.message.author.mention.__eq__('<@465981081456214019>'):
         _sync = await ctx.bot.tree.sync()
         await ctx.send(f'Synced {len(_sync)} commands!')
-        logger.log_info('Commands synced!', ctx)
+        logger.info('Commands synced!', ctx)
     else:
         await ctx.send(f'You don\'t have permission.')
-        logger.log_info('User have no permission to sync commands', ctx)
+        logger.info('User have no permission to sync commands', ctx)
+
 
 @bot.command()
 async def ping(ctx):
@@ -455,7 +456,7 @@ async def ping(ctx):
     """
 
     await ctx.send(f'Pong')
-    logger.log_info('Pong', ctx)
+    logger.info('Pong', ctx)
 
 
 
