@@ -193,6 +193,8 @@ async def list_pick(ctx):
         time.sleep(1)
         await message.edit(content='🥁 🥁 🥁 🥁 🥁 ')
         time.sleep(1)
+        await message.edit(content='🥁 🥁 🥁 🥁 🥁 🥁 ')
+        time.sleep(1)
         await message.edit(content=f'Choosen item for you is: **{result}**')
 
     await dc(ctx, from_='list_pick')
@@ -236,6 +238,8 @@ async def list_pick_sheet(ctx):
         await message.edit(content='🥁 🥁 🥁 🥁 ')
         time.sleep(1)
         await message.edit(content='🥁 🥁 🥁 🥁 🥁 ')
+        time.sleep(1)
+        await message.edit(content='🥁 🥁 🥁 🥁 🥁 🥁 ')
         time.sleep(1)
         await message.edit(content=f'Choosen item for you is: **{result}**')
 
