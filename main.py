@@ -22,8 +22,8 @@ intents.message_content = True
 help_command = commands.DefaultHelpCommand(no_category = 'Commands')
 
 bot = commands.Bot(
-    command_prefix = commands.when_mentioned_or('='),
-    description = "El Gato Singer 🎤🐈 Bot",
+    command_prefix = commands.when_mentioned_or('=='),
+    description = "Mini El Gato Bot",
     help_command = help_command, 
     intents=intents
 )
@@ -56,277 +56,22 @@ async def on_command_completion(ctx):
 
 # * * * * * * * * * COMMAND FUNCTIONS * * * * * * * * *
 
-@bot.hybrid_command(name='sing', description='Plays a song for you')
-async def sing(ctx):
-
-    """
-    tells you a randome lame (dad) joke.
-
-    :return: sends a joke as a message to the same channel.
-    """
-
     
-@bot.hybrid_command(name='test')
-async def test(ctx):
-    """
-    Test function
-    """
+# @bot.hybrid_command(name='test')
+# async def test(ctx):
+#     """
+#     Test function
+#     """
 
-    channel = discord.utils.get(ctx.guild.text_channels, name="bot-commands")
-    channel_1 = discord.utils.get(ctx.guild.text_channels, name="new-members")
-    channel_2 = discord.utils.get(ctx.guild.text_channels, name="assssssssfasfs")
-    await channel.send(f"channel_1: {channel_1}\nchannel_2: {channel_2}")
-
+#     channel = discord.utils.get(ctx.guild.text_channels, name="bot-commands")
+#     channel_1 = discord.utils.get(ctx.guild.text_channels, name="new-members")
+#     channel_2 = discord.utils.get(ctx.guild.text_channels, name="assssssssfasfs")
+#     await channel.send(f"channel_1: {channel_1}\nchannel_2: {channel_2}")
 
 
 """
-Music Player
+Voice Player (No Queue)
 """
-
-from youtube_dl import YoutubeDL
-from queue import Queue
-import asyncio
-import nacl
-
-guilds = {}
-guild_song_names = {}
-player_flag = {}
-local_counter = 2
-queue_cache = {}
-queue_size = 20
-
-
-@bot.hybrid_command(name='play', description='Play a song by name or url')
-async def play(ctx, *, name):
-
-    check_result = await check_voice_channel(ctx)
-    if check_result == 'err':
-        await ctx.send(content="You are not in a voice channel!", ephemeral=True)
-        return
-
-    global guilds, local_counter
-
-    if not guilds.get(ctx.guild.id).full():
-
-        new_name, options = check_options(name)
-
-        video, source_ = await search(new_name)
-        song_name = video['title']
-
-        FFMPEG_OPTS = {
-            'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'+options,
-            'options': '-vn -probesize 32 -analyzeduration 0'
-        }
-        # FFMPEG_OPTS = {
-        #     'before_options': '',
-        #     'options': ''
-        # }
-        # source = discord.FFmpegPCMAudio(source_, **FFMPEG_OPTS)
-        source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(source_, **FFMPEG_OPTS))
-
-        local_counter += 1
-        new_q = guilds.get(ctx.guild.id)
-        new_q.put(source)
-        new_q_name = guild_song_names.get(ctx.guild.id)
-        new_q_name.put(song_name)
-        guilds.update({ctx.guild.id: new_q})
-        guild_song_names.update({ctx.guild.id: new_q_name})
-
-        voice_channel = ctx.author.voice.channel
-        voice_client = voice_channel.guild.voice_client
-
-        if not voice_client.is_playing():
-            await player(ctx)
-        else:
-            await ctx.send(content=f'Enqueued **{song_name}**',
-                           ephemeral=True)
-    else:
-        await ctx.send(content="Queue is full!", ephemeral=True)
-
-
-
-def check_options(name):
-    options = ''
-    new_name = name.split('--')[0]
-
-    ### Start ###
-
-    if name.__contains__('--start '):
-        start = name.split('--start ')[1].split('--')[0].strip()
-        if start != '':
-            options += ' -ss '+start
-
-    if name.__contains__('--begin '):
-        start = name.split('--begin ')[1].split('--')[0].strip()
-        if start != '':
-            options += '-ss '+start
-
-    ### Finish ###
-
-    if name.__contains__('--finish '):
-        finish = name.split('--finish ')[1].split('--')[0].strip()
-        if finish != '':
-            options += ' -to '+finish
-
-    if name.__contains__('--stop '):
-        finish = name.split('--stop ')[1].split('--')[0].strip()
-        if finish != '':
-            options += ' -to '+finish
-
-    if name.__contains__('--end '):
-        finish = name.split('--end ')[1].split('--')[0].strip()
-        if finish != '':
-            options += ' -to '+finish
-
-    ### Duration ###
-
-    if name.__contains__('--for '):
-        finish = name.split('--for ')[1].split('--')[0].strip()
-        if finish != '':
-            options += ' -t '+finish
-
-    if name.__contains__('--duration '):
-        finish = name.split('--duration ')[1].split('--')[0].strip()
-        if finish != '':
-            options += ' -t '+finish
-
-    return new_name, options
-
-
-async def check_voice_channel(ctx):
-    try:
-        voice_channel = ctx.author.voice.channel
-    except AttributeError:
-        return 'err'
-
-    global guilds, local_counter, queue_cache
-
-    voice_client = ctx.channel.guild.voice_client
-    if voice_client is None:
-        voice_client = await voice_channel.connect()
-        guilds.update({ctx.guild.id: Queue(maxsize=queue_size)})
-        guild_song_names.update({ctx.guild.id: Queue(maxsize=queue_size)})
-        player_flag.update({ctx.guild.id: 0})
-
-    elif (voice_client.channel != voice_channel) and (player_flag.get(
-            ctx.guild.id) == 0):
-        await ctx.voice_client.disconnect()
-        voice_client = await voice_channel.connect()
-    elif (voice_client.channel == voice_channel):
-        do_nothing = 0
-    else:
-        await ctx.send(content="Bot is already in a voice channel",
-                       ephemeral=True)
-        return 'err'
-
-
-async def search(query):
-    if query.__contains__('youtube.com/shorts/'):
-        query = query.replace('shorts/', 'watch?v=')
-    with YoutubeDL({
-            'format': 'bestaudio',
-            'keepvideo': False,
-            'noplaylist': 'True'
-    }) as ydl:
-        try:
-            print(requests.get(query))
-        except:
-            info = ydl.extract_info(f"ytsearch:{query}",
-                                    download=False)['entries'][0]
-        else:
-            info = ydl.extract_info(query, download=False)
-    return (info, info['formats'][0]['url'])
-
-
-async def player(ctx):
-    global guilds
-    voice_client = ctx.channel.guild.voice_client
-    voice_channel = ctx.author.voice.channel
-    try:
-        voice_client = await voice_channel.connect()
-    except Exception as e:
-        print(e)
-    global player_flag
-    while not guilds.get(ctx.guild.id).empty():
-        player_flag.update({ctx.guild.id: 1})
-        if not voice_client.is_playing():
-            current_q = guilds.get(ctx.guild.id)
-            song_name_q = guild_song_names.get(ctx.guild.id)
-
-            song_to_be_played = current_q.get()
-            await ctx.send(content=f'Playing **{song_name_q.get()}**',
-                           ephemeral=False)
-            voice_client.play(song_to_be_played)
-            while voice_client.is_playing():
-                await asyncio.sleep(1)
-
-        player_flag.update({ctx.guild.id: 0})
-
-
-@bot.hybrid_command(name='skip', description='Skip this song...')
-async def skip(ctx):
-    voice_client = ctx.channel.guild.voice_client
-
-    try:
-        voice_channel = ctx.author.voice.channel
-    except AttributeError:
-        await ctx.send(content="You are not in the same voice channel!",
-                       ephemeral=True)
-        return
-    voice_client = ctx.channel.guild.voice_client
-    if voice_client is None:
-        await ctx.send(content="No music is playing.", ephemeral=True)
-        return
-    elif (voice_client.channel == voice_channel):
-        do_nothing = 0
-    else:
-        await ctx.send(content="You are not in the same voice channel!",
-                       ephemeral=True)
-        return
-
-    voice_client.stop()
-    await ctx.send(content="Skipped", ephemeral=True)
-
-
-@bot.hybrid_command(name='dc',
-                    description='Disconnects from the voice channel.')
-async def dc(ctx):
-    await clear_queue(ctx, False)
-
-
-@bot.hybrid_command(name='stop', description='Stopps the current queue.')
-async def stop(ctx):
-    await clear_queue(ctx, True)
-
-
-async def clear_queue(ctx, stop_):
-    voice_client = ctx.channel.guild.voice_client
-
-    try:
-        voice_channel = ctx.author.voice.channel
-    except AttributeError:
-        await ctx.send(content="You are not in the same voice channel!",
-                       ephemeral=True)
-        return
-    voice_client = ctx.channel.guild.voice_client
-    if voice_client is None:
-        await ctx.send(content="No music is playing.", ephemeral=True)
-        return
-    elif (voice_client.channel == voice_channel):
-        do_nothing = 0
-    else:
-        await ctx.send(content="You are not in the same voice channel!",
-                       ephemeral=True)
-        return
-
-    with guilds.get(ctx.guild.id).mutex:
-        guilds.get(ctx.guild.id).queue.clear()
-    if not stop_:
-        await ctx.voice_client.disconnect()
-        await ctx.send(content="Disconnected", ephemeral=True)
-    else:
-        voice_client.stop()
-        await ctx.send(content="Stopped", ephemeral=True)
 
 
 @bot.hybrid_command(name='come', description='Make the bot follow you.')
@@ -339,30 +84,48 @@ async def come(ctx, song='cute'):
         return 'err'
 
     voice_client = ctx.channel.guild.voice_client
+
     if voice_client is None:
         voice_client = await voice_channel.connect()
-        try:
-            guilds.get(ctx.guild.id).empty()
-        except AttributeError:
-            guilds.update({ctx.guild.id: Queue(maxsize=queue_size)})
-            guild_song_names.update(
-                {ctx.guild.id: Queue(maxsize=queue_size)})
-            player_flag.update({ctx.guild.id: 0})
-    elif (voice_client.channel != voice_channel) and (
-        (ctx.author in voice_client.channel.members) or
-            (player_flag.get(ctx.guild.id) == 0)):
+    elif (voice_client.channel != voice_channel) and (ctx.author in voice_client.channel.members):
         await voice_client.move_to(voice_channel)
-    # else:
-    #     await ctx.send(content="Bot is already in a voice channel",
-    #                    ephemeral=True)
-    #     return
 
-    source = discord.PCMVolumeTransformer(
-        discord.FFmpegPCMAudio('sing/'+song+'.mp3'))
+    source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio('sing/'+song+'.mp3'))
     if not voice_client.is_playing():
         voice_client.play(source, after=None)
-    if not str(ctx.message.type).__eq__('MessageType.default'):
-        await ctx.send(content="I'm here!", ephemeral=True)
+
+
+@bot.hybrid_command(name='dc', description='Make the bot Disconnect.')
+async def dc(ctx, from_='command'):
+    voice_client = ctx.channel.guild.voice_client
+
+    try:
+        voice_channel = ctx.author.voice.channel
+    except AttributeError:
+        await ctx.send(content="You are not in the same voice channel!", ephemeral=True)
+        return
+    
+    voice_client = ctx.channel.guild.voice_client
+
+    if voice_client is None:
+        return
+    elif (voice_client.channel == voice_channel):
+        pass
+    else:
+        await ctx.send(content="You are not in the same voice channel!", ephemeral=True)
+        return
+
+    if from_.startswith('list_pick'):
+        import asyncio
+        while voice_client.is_playing():
+            await asyncio.sleep(1)
+    
+    voice_client.stop()
+    await ctx.voice_client.disconnect()
+
+    if from_ == 'command':
+        await ctx.send(content="Disconnected", ephemeral=True)
+
 
 """
 List Picker commands
@@ -394,9 +157,6 @@ async def list_pick(ctx):
     result = list_of_items[random.randint(0, len(list_of_items)-1)]
     result = f'{result[0]} - {result[1]} - {result[2]}'
 
-    # time.sleep(0.5)
-    # add check if voice bot is present 
-
     if await come(ctx, 'drum_roll') != 'err':
     
         message = await ctx.reply(content='🥁')
@@ -410,6 +170,8 @@ async def list_pick(ctx):
         await message.edit(content='🥁 🥁 🥁 🥁 🥁 ')
         time.sleep(1)
         await message.edit(content=f'Choosen item for you is: **{result}**')
+
+    await dc(ctx, from_='list_pick')
 
 
 @bot.hybrid_command(name='list_pick_sheet', description='Pick a random item from the items list')
@@ -437,9 +199,6 @@ async def list_pick_sheet(ctx):
     result = list_of_items[random.randint(0, len(list_of_items)-1)]
     result = f'{result[1]} - {result[0]}'
 
-    # time.sleep(0.5)
-    # add check if voice bot is present
-
     if await come(ctx, 'drum_roll') != 'err':
     
         message = await ctx.reply(content='🥁')
@@ -453,6 +212,8 @@ async def list_pick_sheet(ctx):
         await message.edit(content='🥁 🥁 🥁 🥁 🥁 ')
         time.sleep(1)
         await message.edit(content=f'Choosen item for you is: **{result}**')
+
+    await dc(ctx, from_='list_pick_sheet')
 
 
 @bot.hybrid_command(name='list_add', description='Add an to the item list in order to pick a random item')
@@ -558,7 +319,6 @@ async def list_view_sheet(ctx):
             item_list+=f'\n{i+1} - {value[1]} - {value[0]}'
         item_list+='```'
         await ctx.send(item_list)
-
 
 
 @bot.hybrid_command(name='list_delete', description='Clear the an item from the items list')
