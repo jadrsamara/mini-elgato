@@ -9,9 +9,6 @@ import sqlite3
 import requests
 import database
 import logger
-import newrelic.agent
-
-newrelic.agent.initialize('newrelic.ini', 'production')
 
 # * * * * * * * * * *  BOT SETTINGS  * * * * * * * * * *
 
@@ -118,10 +115,16 @@ async def dc(ctx, from_='command'):
         await ctx.send(content="You are not in the same voice channel!", ephemeral=True)
         return
 
-    if from_.startswith('list_pick'):
-        import asyncio
+    import asyncio
+
+    # await asyncio.sleep(1)
+
+    if from_.startswith('list_pick') or from_.startswith('timer'):
+        print(voice_client.is_playing())
         while voice_client.is_playing():
             await asyncio.sleep(1)
+      
+    # await asyncio.sleep(1)
     
     voice_client.stop()
     await ctx.voice_client.disconnect()
@@ -151,6 +154,48 @@ async def wait_until_voice_ready(ctx):
 
     return
 
+
+"""
+List Picker commands
+"""
+
+@bot.hybrid_command(name='timer', description='Starts a timer')
+async def timer(ctx, type, num):
+    
+    """
+    starts a timer and alerts when timer finshes
+
+    :param string: number
+    :return: sends multiple messages as a suspense, then alerts when the timer is done.
+    """
+
+    import re
+    number = int(re.findall('[0-9]+', num)[0])
+
+    if type == 'sec' and number <= 7200:
+        message = await ctx.reply(content=f'{number} seconds')
+        number=number
+    elif type == 'min' and number <= 120:
+        message = await ctx.reply(content=f'{number} minutes')
+        number=number*60
+    elif type == 'hour' and number <= 2:
+        message = await ctx.reply(content=f'{number} hours')
+        number=number*60*60
+    else:
+        message = await ctx.reply(content='invalid request')
+        return
+
+    import asyncio
+
+    if await come(ctx, 'start_now') != 'err':
+        await wait_until_voice_ready(ctx)
+    await dc(ctx, from_='timer')
+
+    await asyncio.sleep(number)
+
+    if await come(ctx, 'alarm_ringtone') != 'err':
+        await wait_until_voice_ready(ctx)
+        await dc(ctx, from_='timer')
 
 """
 List Picker commands
