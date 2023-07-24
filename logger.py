@@ -68,7 +68,7 @@ def warn(message, ctx):
     })
 
 
-def error(error, ctx):
+async def error(error, ctx):
     """
     Error logger interface
     """
@@ -79,4 +79,6 @@ def error(error, ctx):
         "server_name":ctx.guild,
         "server_id":ctx.guild.id
     })
+
+    await ctx.send(content=error,ephemeral=True)
 

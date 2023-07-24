@@ -43,7 +43,7 @@ async def on_command_error(ctx, error):
     """
     Function to log when a command has an exception.
     """
-    logger.error(error, ctx)
+    await logger.error(error, ctx)
 
 
 @bot.event
